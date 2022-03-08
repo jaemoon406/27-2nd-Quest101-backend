@@ -5,16 +5,8 @@ from users.models import User
 from quest101.settings import SECRET_KEY, ALGORITHM
 
 
-
-class MyPermission(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return (request.user, True)
-
 def Authorize(func):
-    def __init__(self, original_function):
-        self.original_function = original_function
-    
-    def __call__(self, request, *args, **kwargs):
+    def wrapper(self, request, *args, **kwargs):
         try:
             token = request.headers.get('Authorization')
 
@@ -31,12 +23,11 @@ def Authorize(func):
 
         except User.DoesNotExist:
             return JsonResponse({'message': 'INVALID_USER'}, status=401)
-
+    return wrapper
 
 
 def AuthorizeProduct(func):
     def wrapper(self, request, *args, **kwargs):
-        print(request.body, 'request.bodyrequest.bodyrequest.body')
         token = request.headers.get('Authorization')
 
         if not token:

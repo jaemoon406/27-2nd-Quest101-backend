@@ -7,7 +7,8 @@ from core.utils import Authorize
 from datetime import datetime, timedelta
 from django.db.models import (F, Sum)
 from quest101.settings import SECRET_KEY, ALGORITHM
-from users.models import User
+from users.models import User, UserCourse
+from products.models import Like
 
 
 class KakaoAPI:
@@ -59,25 +60,6 @@ class KakaoSignInView(View):
             return JsonResponse({'message': 'TOKEN_EXPIRED'}, status=400)
 
 
-class UserStatView(View):
-    @Authorize
-    def get(self, request):
-        try:
-            stats = User.objects.filter(id=request.user.id).annotate(
-                score=F('usercoursestat__course_stat__score'),
-                stat_name=F('usercoursestat__course_stat__stat__name')
-            ).values('stat_name').annotate(stat=Sum('score'))
-
-            result = {
-                "id": request.user.id,
-                "name": request.user.name,
-                "stats": list(stats)
-            }
-            return JsonResponse({'result': result}, status=200)
-
-        except KeyError:
-            return JsonResponse({'message': 'KEY_ERROR'}, status=401)
-
 class UserDetailView(View):
     @Authorize
     def get(self, request):
@@ -85,16 +67,16 @@ class UserDetailView(View):
             user = request.user
             user_get = User.objects.get(id=user.id)
             user_id = User.objects.filter(id=user.id)
-            stats = user_id.annotate(
+            stats = list(user_id.annotate(
                 score=F('usercoursestat__course_stat__score'),
                 stat_name=F('usercoursestat__course_stat__stat__name')
-            ).values('stat_name').annotate(stat=Sum('score'))
+            ).values('stat_name').annotate(stat=Sum('score')))
 
             result = {
                 'user_stat': {
-                    "user_id": request.user.id,
+                    'user_id': request.user.id,
                     'name': request.user.name,
-                    'stat': list(stats)
+                    'stats': stats
                 },
                 'like_course': [{
                     'course_id': like.course.id,

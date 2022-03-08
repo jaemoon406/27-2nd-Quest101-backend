@@ -28,13 +28,13 @@ class OrderView(View):
                     course_id=course_id,
                     user_id=request.user.id
                 )
-                return JsonResponse({"message": "SUCCESS"}, status=200)
+                return JsonResponse({'message': 'SUCCESS'}, status=201)
 
         except IntegrityError:
-            return JsonResponse({"message": "USER ALREADY EXISTS"}, status=401)
+            return JsonResponse({'message': 'USER ALREADY EXISTS'}, status=401)
 
         except CourseStat.DoesNotExist:
-            return JsonResponse({"message": "INVAILD_COURSE_STAT"}, status=401)
+            return JsonResponse({'message': 'INVAILD_COURSE_STAT'}, status=401)
 
 
 class CommentView(View):
@@ -44,16 +44,13 @@ class CommentView(View):
             data = json.loads(request.body)
             user_id = request.user.id
 
-            Comment.objects.create(content=data['content'], course_id=course_id, user_id=user_id)
+            Comment.objects.create(
+                content=data['content'],
+                course_id=course_id,
+                user_id=user_id
+            )
 
-            comments = Course.objects.get(id=course_id).comment_set.all()
-            course_comments = [{
-                'id': comment.id,
-                'name': comment.user.name,
-                'content': comment.content
-            } for comment in comments]
-
-            return JsonResponse({'message': course_comments}, status=200)
+            return JsonResponse({'message': 'SUCCESS'}, status=201)
 
         except KeyError:
             return JsonResponse({'message': 'KEY_ERROR'}, status=401)
@@ -61,13 +58,16 @@ class CommentView(View):
     def get(self, request, course_id):
         try:
             comments = Course.objects.get(id=course_id).comment_set.all()
-            course_comments = [{
+            OFFSET = int(request.GET.get('offset', 0))
+            LIMIT = int(request.GET.get('display', 6))
+
+            result = [{
                 'id': comment.id,
                 'name': comment.user.name,
                 'content': comment.content
-            } for comment in comments]
+            } for comment in comments[OFFSET:OFFSET + LIMIT]]
 
-            return JsonResponse({'result': course_comments}, status=200)
+            return JsonResponse({'result': result}, status=201)
         except KeyError:
             return JsonResponse({'message': 'KEY_ERROR'}, status=401)
 
@@ -78,10 +78,13 @@ class CommentView(View):
             data = json.loads(request.body)
             comment_id = data['comment_id']
 
-            comment = Comment.objects.get(id=comment_id, user_id=user_id)
-            comment.delete()
+            Comment.objects.get(
+                id=comment_id,
+                user_id=user_id,
+                course_id=course_id
+            ).delete()
 
-            return JsonResponse({'message': 'SUCCESS_DELETE'}, status=200)
+            return JsonResponse({'message': 'SUCCESS_DELETE'}, status=201)
 
         except KeyError:
             return JsonResponse({'message': 'KEY_ERROR'}, status=401)
@@ -95,23 +98,23 @@ class LikeView(View):
     def post(self, request):
         try:
             data = json.loads(request.body)
-            course_id = data["course_id"]
+            course_id = data['course_id']
 
             like, created = Like.objects.get_or_create(course_id=course_id, user_id=request.user.id)
 
             if not created:
                 like.delete()
-                return JsonResponse({"message": "DELETE_LIKE"}, status=200)
-            return JsonResponse({"message": "SUCCESS_LIKE"}, status=200)
+                return JsonResponse({'message': 'DELETE_LIKE'}, status=200)
+            return JsonResponse({'message': 'SUCCESS_LIKE'}, status=200)
 
         except KeyError:
-            return JsonResponse({"message": "KEY_ERROR"}, status=400)
+            return JsonResponse({'message': 'KEY_ERROR'}, status=400)
 
         except JSONDecodeError:
-            return JsonResponse({"message": "JSON_DECODE_ERROR"}, status=400)
+            return JsonResponse({'message': 'JSON_DECODE_ERROR'}, status=400)
 
         except IntegrityError:
-            return JsonResponse({"message": "INVALID_VALUE"}, status=400)
+            return JsonResponse({'message': 'INVALID_VALUE'}, status=400)
 
 
 class ProductView(View):
@@ -124,31 +127,31 @@ class ProductView(View):
             media = course.media_set.get()
 
             results = {
-                "course_id": course.id,
-                "sub_category": course.sub_category.name,
-                "course_name": course.name,
-                "description": course.description,
-                "thumbnail_url": course.thumbnail_image_url,
-                "course_level": course.level.level,
-                "price": course.price,
-                "payment_period": course.payment_period,
-                "discount_rate": course.discount_rate,
-                "discount_price": course.price * course.discount_rate / 100,
-                "page_image": media.url,
-                "course_like": course.like_set.count(),
-                "charm_stat": 3,
-                "art_stat": 5,
-                "health_stat": 6,
-                "intellect_stat": 10,
-                "is_like_True": course.like_set.filter(user=request.user).exists(),
-                "user_name": course.user.name,
-                "profile_image": course.user.profile_image
+                'course_id': course.id,
+                'sub_category': course.sub_category.name,
+                'course_name': course.name,
+                'description': course.description,
+                'thumbnail_url': course.thumbnail_image_url,
+                'course_level': course.level.level,
+                'price': course.price,
+                'payment_period': course.payment_period,
+                'discount_rate': course.discount_rate,
+                'discount_price': course.price * course.discount_rate / 100,
+                'page_image': media.url,
+                'course_like': course.like_set.count(),
+                'charm_stat': 3,
+                'art_stat': 5,
+                'health_stat': 6,
+                'intellect_stat': 10,
+                'is_like_True': course.like_set.filter(user=request.user).exists(),
+                'user_name': course.user.name,
+                'profile_image': course.user.profile_image
             }
-            return JsonResponse({"results": results}, status=200)
+            return JsonResponse({'results': results}, status=200)
 
         except Course.DoesNotExist:
 
-            return JsonResponse({"message": "INVALID_COURSE"}, status=401)
+            return JsonResponse({'message': 'INVALID_COURSE'}, status=401)
 
 
 class ProductListView(View):
@@ -170,18 +173,18 @@ class ProductListView(View):
 
         products = Course.objects.prefetch_related('like_set').filter(q).distinct()
 
-        results = [{"course_id": product.id,
-                    "thumbnail": product.thumbnail_image_url,
-                    "user_name": product.user.name,
-                    "sub_category": product.sub_category.name,
-                    "course_name": product.name,
-                    "price": product.price,
-                    "payment_period": product.payment_period,
-                    "discount_rate": product.discount_rate,
-                    "discount_price": product.price * product.discount_rate / 100,
-                    "course_like": product.like_set.count(),
-                    "is_like_True": product.like_set.filter(user=request.user).exists(),
+        results = [{'course_id': product.id,
+                    'thumbnail': product.thumbnail_image_url,
+                    'user_name': product.user.name,
+                    'sub_category': product.sub_category.name,
+                    'course_name': product.name,
+                    'price': product.price,
+                    'payment_period': product.payment_period,
+                    'discount_rate': product.discount_rate,
+                    'discount_price': product.price * product.discount_rate / 100,
+                    'course_like': product.like_set.count(),
+                    'is_like_True': product.like_set.filter(user=request.user).exists(),
 
                     } for product in products]
 
-        return JsonResponse({"results": results}, status=200)
+        return JsonResponse({'results': results}, status=200)

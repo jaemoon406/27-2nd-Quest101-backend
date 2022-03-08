@@ -9,37 +9,36 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
-
+import os
+from dotenv import load_dotenv
 from pathlib import Path
+
+config = load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-import os
-import pymysql
-pymysql.install_as_MySQLdb()
+# import pymysql
+# pymysql.install_as_MySQLdb()
 
-SECRET_KEY = os.environ["SECRETKEY2"]
-ALGORITHM  = os.environ["ALGORITHM"]
+SECRET_KEY = os.environ["SECRET_KEY"]
+ALGORITHM = os.environ["ALGORITHM"]
 
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
 DATABASES = {
-    'default' :
-{
-        'ENGINE'  : 'django.db.backends.mysql',
-        'NAME'    : os.environ['DB2'],
-        'USER'    : os.environ['USER'],
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'quest101',
+        'USER': os.environ['USER'],
         'PASSWORD': os.environ['PASSWORD'],
-        'HOST'    : os.environ['HOST'],
-        'PORT'    : os.environ['PORT'],
-        'OPTIONS' : {'charset': 'utf8mb4'}
+        'HOST': '127.0.0.1',
+        'PORT': os.environ['PORT'],
+        'OPTIONS': {'charset': 'utf8mb4'}
     }
 }
-
-
 
 # Application definition
 
@@ -54,8 +53,6 @@ INSTALLED_APPS = [
     'users',
     'core',
     'products',
-    'creators',
-    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -63,7 +60,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -89,10 +86,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'quest101.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-
 
 
 # Password validation
@@ -113,7 +108,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
@@ -124,7 +118,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = False
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
@@ -161,15 +154,4 @@ CORS_ALLOW_HEADERS = (
     'x-requested-with',
 )
 
-APPEND_SLASH     = False
-
-AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
-AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
-AWS_STORAGE_BUCKET_NAME = "haileysbucket"
-AWS_REGION = "ap-northeast-2"
-
-REST_FRAMEWORK = {
-'DEFAULT_PERMISSION_CLASSES': [
-   'rest_framework.permissions.AllowAny',
-]
-}
+APPEND_SLASH = False
