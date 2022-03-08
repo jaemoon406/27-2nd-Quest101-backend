@@ -1,7 +1,6 @@
 from django.db   import models
-from django.db.models.fields import URLField
 
-from core.models     import TimeStampModel
+from models import TimeStampModel
 from products.models import Course,CourseStat
 
 class User(TimeStampModel):

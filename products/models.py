@@ -1,6 +1,6 @@
 from django.db   import models
 
-from core.models  import TimeStampModel
+from models import TimeStampModel
         
 class Course(TimeStampModel):
     name                 = models.CharField(max_length=45, null=True)

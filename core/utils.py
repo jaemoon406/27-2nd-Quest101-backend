@@ -3,7 +3,8 @@ import jwt
 from django.http import JsonResponse
 
 from users.models import User
-from quest101.settings  import SECRET_KEY, ALGORITHM
+from quest101.settings import SECRET_KEY, ALGORITHM
+
 
 def Authorize(func):
     def wrapper(self, request, *args, **kwargs):
@@ -11,35 +12,36 @@ def Authorize(func):
             token = request.headers.get('Authorization')
 
             if not token:
-                return JsonResponse({'message' : 'TOKEN_REQUIRED'}, status=401)
+                return JsonResponse({'message': 'TOKEN_REQUIRED'}, status=401)
 
-            payload      = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            user         = User.objects.get(id=payload['user'])
-            request.user = user
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            request.user = User.objects.get(id=payload['user_id'])
 
             return func(self, request, *args, **kwargs)
 
         except jwt.exceptions.DecodeError:
-            return JsonResponse({'message' : 'INVALID_TOKEN'}, status=401)
+            return JsonResponse({'message': 'INVALID_TOKEN'}, status=401)
 
         except User.DoesNotExist:
-            return JsonResponse({'message' : 'INVALID_USER'}, status=401)
+            return JsonResponse({'message': 'INVALID_USER'}, status=401)
 
     return wrapper
 
+
 def AuthorizeProduct(func):
     def wrapper(self, request, *args, **kwargs):
-        
+        print(request.body, 'request.bodyrequest.bodyrequest.body')
         token = request.headers.get('Authorization')
 
         if not token:
             request.user = None
-            return func(self, request, *args, **kwargs) 
-        
-        payload      = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            return func(self, request, *args, **kwargs)
 
-        user         = User.objects.get(id=payload['user'])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
+        user = User.objects.get(id=payload['user_id'])
         request.user = user
+        print(request.user, '==============================request.user2')
 
         return func(self, request, *args, **kwargs)
 
