@@ -1,12 +1,12 @@
 from django.urls import path
 
-from .views import CommentView, OrderView, ProductView, ProductListView, LikeView
-
+from .views import UserDetailView, OrderView, CommentView, LikeView, ProductListView, ProductView
 
 urlpatterns = [
     path('/<int:course_id>/order', OrderView.as_view()),
-    path('/<int:course_id>/comment', CommentView.as_view()),
-    path('/detail/<int:course_id>', ProductView.as_view()),
-    path('', ProductListView.as_view()),
     path('/like', LikeView.as_view()),
+    path('/detail/<int:course_id>', ProductView.as_view()),
+    path('/<int:course_id>/comments', CommentView.as_view()),
+    path('', ProductListView.as_view()),
+    path('/<int:user_id>/detial', UserDetailView.as_view()),
 ]
