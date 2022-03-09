@@ -1,28 +1,36 @@
-import json
-from django.test   import TestCase, Client
 from unittest.mock import patch, MagicMock
+import jwt
 
-from users.models  import User
+from datetime import datetime
+
+from django.test import TestCase, Client
+
+from quest101.settings import SECRET_KEY, ALGORITHM
+from products.models import *
+from users.models import *
+from users.models import User
+
 
 class KakaoLoginTest(TestCase):
     def setUp(self):
         user = User.objects.create(
-            kakao_id      = "01924234",
-            name          = "박정현",
-            email         = "hailey@gmail.com",
-            profile_image = "https://ifh.cc/g/ElNIU1.jpg",
-            phone_number  = "01012341234",
+            kakao_id="01924234",
+            name="박정현",
+            email="hailey@gmail.com",
+            profile_image="https://ifh.cc/g/ElNIU1.jpg",
+            phone_number="01012341234",
         )
 
     def tearDown(self):
         User.objects.all().delete()
-        
+
     @patch('users.views.requests')
     def test_kakaologinview_get_success(self, mocked_requests):
         client = Client()
+
         class MockedResponse:
             def json(self):
-                return{
+                return {
                     "id": 2008761000,
                     "connected_at": "2021-12-10T03:56:15Z",
                     "properties": {
@@ -52,146 +60,140 @@ class KakaoLoginTest(TestCase):
                         "gender_needs_agreement": False,
                         "gender": "female",
                         "is_kakaotalk_user": True
-                }
+                    }
                 }
 
-        mocked_requests.get = MagicMock(return_value = MockedResponse())
-        headers = {"HTTP_Authorization" : "가짜 access_token"}
+        mocked_requests.get = MagicMock(return_value=MockedResponse())
+        headers = {"HTTP_Authorization": "가짜 access_token"}
         response = client.get("/users/kakaosignin", **headers)
-        
+
         access_token = response.json()['access_token']
-        
-        self.assertEqual(response.json(),{'message':'SUCCESS','access_token': access_token})
-        self.assertEqual(response.status_code, 200 | 201) 
 
-import jwt,json
+        self.assertEqual(response.json(), {'message': 'SUCCESS', 'access_token': access_token})
+        self.assertEqual(response.status_code, 200 | 201)
 
-from django.http import response
-from datetime import datetime
-
-from django.test import TestCase, Client
-
-from quest101.settings import SECRET_KEY,ALGORITHM
-from products.models import *
-from users.models import *
 
 class CommentTest(TestCase):
     def setUp(self):
-        User.objects.create(
-            id            = 1,
-            name          = 'a', 
-            profile_image = 'a',
-            description   = 'a',
-            kakao_id      = 1,
-            is_creator    = False
-        )
-        User.objects.create(
-            id          = 2,
-            name        = 'b',
-            description = 'b',
-            kakao_id    = 2,
-            is_creator  = True
-        )
-        Category.objects.create(
-            id   = 1,
-            name = 'a'
+        User.objects.bulk_create(
+            [
+                User(
+                    id=1,
+                    name='a',
+                    profile_image='a',
+                    description='a',
+                    kakao_id=1,
+                    is_creator=False,
+                ),
+                User(
+                    id=2,
+                    name='b',
+                    description='b',
+                    kakao_id=2,
+                    is_creator=True
+                )
+            ]
         )
         SubCategory.objects.create(
-            id          = 1,
-            name        = 'a1',
-            category_id = 1
+            id=1,
+            name='a1',
+            category_id=1
         )
         Level.objects.create(
-            id    = 1,
-            level = 'a'
+            id=1,
+            level='a'
         )
-        Course.objects.create(
-            id                  = 1,
-            name                = 'a',
-            thumbnail_image_url = 'a',
-            description         = 'a',
-            price               = 100,
-            start_date          = datetime(2021,12,12,12,12,1),
-            end_date            = datetime(2021,12,12,12,12,2),
-            payment_period      = 1,
-            user_id             = 2,
-            sub_category_id     = 1,
-            level_id            = 1
+        Course.objects.bulk_create(
+            [
+                User(
+                    id=1,
+                    name='a',
+                    thumbnail_image_url='a',
+                    description='a',
+                    price=100,
+                    start_date=datetime(2021, 12, 12, 12, 12, 1),
+                    end_date=datetime(2021, 12, 12, 12, 12, 2),
+                    payment_period=1,
+                    user_id=2,
+                    sub_category_id=1,
+                    level_id=1),
+                User(
+                    id=2,
+                    name='b',
+                    thumbnail_image_url='b',
+                    description='b',
+                    price=100,
+                    start_date=datetime(2021, 12, 12, 12, 12, 1),
+                    end_date=datetime(2021, 12, 12, 12, 12, 2),
+                    payment_period=2,
+                    user_id=2,
+                    sub_category_id=1,
+                    level_id=1
+                )
+            ]
         )
-        Course.objects.create(
-            id                  = 2,
-            name                = 'b',
-            thumbnail_image_url = 'b',
-            description         = 'b',
-            price               = 100,
-            start_date          = datetime(2021,12,12,12,12,1),
-            end_date            = datetime(2021,12,12,12,12,2),
-            payment_period      = 2,
-            user_id             = 2,
-            sub_category_id     = 1,
-            level_id            = 1
+        Stat.objects.bulk_create(
+            [
+                Stat(id=1, name='a'),
+                Stat(id=2, name='b'),
+                Stat(id=3, name='c'),
+                Stat(id=4, name='d')
+            ]
         )
-        Stat.objects.create(
-            id = 1,
-            name = 'a'
+
+        CourseStat.objects.bulk_create(
+            [
+                CourseStat(
+                    id=1,
+                    course_id=1,
+                    stat_id=1,
+                    score=3
+                ),
+                CourseStat(
+                    id=2,
+                    course_id=1,
+                    stat_id=2,
+                    score=1
+                ),
+                CourseStat(
+                    id=3,
+                    course_id=1,
+                    stat_id=3,
+                    score=2
+                ),
+                CourseStat(
+                    id=4,
+                    course_id=1,
+                    stat_id=4,
+                    score=6
+                )
+            ]
         )
-        Stat.objects.create(
-            id = 2,
-            name = 'b'
+        UserCourseStat.objects.bulk_create(
+            [
+                UserCourseStat(
+                    id=1,
+                    user_id=1,
+                    course_stat_id=1
+                ),
+                UserCourseStat(
+                    id=2,
+                    user_id=1,
+                    course_stat_id=2
+                ),
+                UserCourseStat(
+                    id=3,
+                    user_id=1,
+                    course_stat_id=3
+                ),
+                UserCourseStat(
+                    id=4,
+                    user_id=1,
+                    course_stat_id=4
+                )
+            ]
         )
-        Stat.objects.create(
-            id = 3,
-            name = 'c'
-        )
-        Stat.objects.create(
-            id = 4,
-            name = 'd'
-        )
-        CourseStat.objects.create(
-            id = 1,
-            course_id = 1,
-            stat_id = 1,
-            score = 3
-        )
-        CourseStat.objects.create(
-            id = 2,
-            course_id = 1,
-            stat_id = 2,
-            score = 1
-        )
-        CourseStat.objects.create(
-            id = 3,
-            course_id = 1,
-            stat_id = 3,
-            score = 2
-        )
-        CourseStat.objects.create(
-            id = 4,
-            course_id = 1,
-            stat_id = 4,
-            score = 6
-        )
-        UserCourseStat.objects.create(
-            id = 1,
-            user_id = 1,
-            course_stat_id = 1
-        )
-        UserCourseStat.objects.create(
-            id = 2,
-            user_id = 1,
-            course_stat_id = 2
-        )
-        UserCourseStat.objects.create(
-            id = 3,
-            user_id = 1,
-            course_stat_id = 3
-        )
-        UserCourseStat.objects.create(
-            id = 4,
-            user_id = 1,
-            course_stat_id = 4 
-        )
-        self.token = jwt.encode({'user': 1}, SECRET_KEY,ALGORITHM)
+        self.token = jwt.encode({'user': 1}, SECRET_KEY, ALGORITHM)
 
     def tearDown(self):
         User.objects.all().delete()
@@ -204,7 +206,7 @@ class CommentTest(TestCase):
 
     def test_user_get_success(self):
         client = Client()
-        header = {"HTTP_Authorization" : self.token}
+        header = {"HTTP_Authorization": self.token}
         result = {
             "id": 1,
             "name": "a",
@@ -225,9 +227,9 @@ class CommentTest(TestCase):
                     "stat_name": "d",
                     "stat": 6
                 }]
-            }
-        
+        }
+
         response = client.get('/users/user', **header, content_type='application/json')
-        
-        self.assertEqual(response.json(),{'result':result})
+
+        self.assertEqual(response.json(), {'result': result})
         self.assertEqual(response.status_code, 200)
